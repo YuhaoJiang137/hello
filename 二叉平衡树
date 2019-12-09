@@ -1,0 +1,230 @@
+public class AvlTreeDemo {
+    public static void main(String[] args) {
+        int[] arr = {10,12,8,9,7,6};
+        AVLTree tree = new AVLTree();
+        for (int i : arr) {
+            tree.add(new Node(i));
+        }
+        System.out.println(tree.getRoot().height());
+        System.out.println(tree.getRoot().leftHeight());
+        System.out.println(tree.getRoot().rightHeight());
+    }
+}
+class AVLTree{
+    public Node root;
+
+    public Node getRoot() {
+        return root;
+    }
+
+    //    public SortTree(Node root) {
+//        this.root = root;
+//    }
+    public Node searchTarget(int value){
+        if (root==null){
+            return null;
+        }else {
+            return root.searchTarget(value);
+        }
+    }
+    public Node searchParent(int value){
+        if (root==null){
+            return null;
+        }else {
+            return root.searchParent(value);
+        }
+    }
+    //删除叶子节点
+    public void delNode(int value){
+        if (root==null){
+            System.out.println("树为空，无法删除");
+        }else {
+            Node target = searchTarget(value);
+            if (target==null){
+                System.out.printf("没有找到值为%d的元素\n",value);
+                return;
+            }
+            if ( root.right==null&&root.left==null){
+                root=null;
+                return;
+            }
+            Node parentNode = searchParent(value);
+            //删除没有一个子节点的节点
+            if (target.left==null && target.right==null){
+                if (parentNode.left !=null && parentNode.left.value==value){
+                    parentNode.left=null;
+                } else if (parentNode.right!=null && parentNode.right.value==value){
+                    parentNode.right=null;
+                }
+            }//删除有两个子节点的节点
+            else if (target.left!=null && target.right!=null){
+                int i = delMin(target.right);
+                target.value=i;
+            }else {
+                //删除只有一个子节点的节点
+                if (target.right!=null){
+                    if (parentNode==null){
+                        root=target.right;
+                    }else{
+                        if (parentNode.left.value==value){
+                            parentNode.left=target.right;
+                        }else {
+                            parentNode.right=target.right;
+                        }
+                    }
+
+                }else {
+                    if (parentNode==null){
+                        root=target.left;
+                    }else{
+                        if (parentNode.left.value==value){
+                            parentNode.left=target.left;
+                        }else {
+                            parentNode.right=target.left;
+                        }
+                    }
+
+                }
+            }
+        }
+
+    }
+    //找到并删除最小值
+    public int delMin(Node node){
+        Node target = node;
+        while (target.left!=null){
+            target=target.left;
+        }
+        int i = target.value;
+        delNode(target.value);
+        return i;
+    }
+    public void add(Node node){
+        if (root==null){
+            root=node;
+        }else {
+            root.add(node);
+        }
+    }
+    public void infixOrder(){
+        if (root==null){
+            System.out.println("树为空，无法遍历");
+        }else {
+            root.infixOrder();
+        }
+    }
+}
+class Node{
+    public int value;
+    public Node left;
+    public Node right;
+
+    public Node(int value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "value=" + value +
+                '}';
+    }
+    //添加节点
+    public void add(Node node){
+        if (node.value>this.value){
+            if (this.right==null){
+                this.right=node;
+            }else {
+                this.right.add(node);
+            }
+        }else {
+            if (this.left==null){
+                this.left=node;
+            }else {
+                this.left.add(node);
+            }
+        }
+        if (rightHeight()-leftHeight()>1){
+            if (right!=null&&right.leftHeight()>right.rightHeight()){
+                right.rightRotate();
+            }
+            leftRotate();
+            return;
+        } else if (leftHeight()-rightHeight()>1){
+            if (left!=null&&left.rightHeight()>left.leftHeight()){
+                left.leftRotate();
+            }
+            rightRotate();
+        }
+    }
+
+    //中序遍历
+    public void infixOrder(){
+        if (this.left!=null){
+            this.left.infixOrder();
+        }
+        System.out.println(this);
+        if (this.right!=null){
+            this.right.infixOrder();
+        }
+    }
+    //查找节点
+    public Node searchTarget(int value){
+        if (this.value == value){
+            return this;
+        }else {
+            if (this.value>value && this.left!=null){
+                return this.left.searchTarget(value);
+            }else if (this.value<value && this.right!=null){
+                return this.right.searchTarget(value);
+            }else {
+                return null;
+            }
+        }
+    }
+    //查找父节点
+    public Node searchParent(int value){
+        if ((this.left!=null&&this.left.value==value)||(this.right!=null&&this.right.value==value)){
+            return this;
+        }else {
+            if (this.value>value && this.left!=null){
+                return this.left.searchParent(value);
+            }else if (this.value<value && this.right!=null){
+                return this.right.searchParent(value);
+            }else {
+                return null;
+            }
+        }
+    }
+    public int height(){
+        return Math.max((left==null ? 0 : left.height()),(right==null ? 0 : right.height()))+1;
+    }
+    public int leftHeight(){
+        if (left==null){
+            return 0;
+        }
+        return left.height();
+    }
+    public int rightHeight(){
+        if (right==null){
+            return 0;
+        }
+        return right.height();
+    }
+    public void leftRotate(){
+        Node newNode = new Node(value);
+        newNode.left=left;
+        newNode.right=right.left;
+        value=right.value;
+        right=right.right;
+        left=newNode;
+    }
+    public void rightRotate(){
+        Node newNode = new Node(value);
+        newNode.right=right;
+        newNode.left=right.left;
+        value=left.value;
+        left=left.left;
+        right=newNode;
+    }
+}
